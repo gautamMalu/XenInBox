@@ -122,7 +122,8 @@ def copyUpdatedFiles(tag, updates, cwd):
 
         if gitfile.endswith('.spec.in') or (gitfile.find('Makefile') != -1) or \
            gitfile.endswith('.c') or gitfile.endswith('.h') or \
-           gitfile.endswith('.sh') or gitfile == 'configure.ac':
+           gitfile.endswith('.sh') or gitfile == 'configure.ac' or \
+	   gitfile.endswith('.md'):
             continue
 
         if gitfile.endswith('.glade'):
