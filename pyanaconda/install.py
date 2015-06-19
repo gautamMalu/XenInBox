@@ -166,7 +166,7 @@ def doInstall(storage, payload, ksdata, instClass):
         ksdata.firstboot.setup(storage, ksdata, instClass)
         ksdata.addons.setup(storage, ksdata, instClass)
 	## adding additional repo for xen4CentOS
-	repo = ksdata.RepoData(name="virt-xen-44-candidate",baseurl="http://cbs.centos.org/repos/virt7-xen-44-candidate/x86_64/os/")
+	repo = ksdata.RepoData(name="virt7-xen-44-testing",baseurl="http://cbs.centos.org/repos/virt7-xen-44-testing/x86_64/os/")
 	payload.addRepo(repo)
 
 
