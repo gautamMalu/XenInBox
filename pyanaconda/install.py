@@ -19,7 +19,7 @@
 #
 # Red Hat Author(s): Chris Lumens <clumens@redhat.com>
 #
-
+import time
 from blivet import turnOnFilesystems, callbacks
 from pyanaconda.bootloader import writeBootLoader
 from pyanaconda.progress import progress_report, progress_message, progress_step, progress_complete, progress_init
@@ -31,6 +31,7 @@ from pyanaconda import network
 from pyanaconda.i18n import _
 from pyanaconda.threads import threadMgr
 from pyanaconda.ui.lib.entropy import wait_for_entropy
+from pyanaconda import nm
 import logging
 import blivet
 log = logging.getLogger("anaconda")
@@ -50,7 +51,7 @@ def _writeKS(ksdata):
         f.write(str(ksdata))
 
     # Make it so only root can read - could have passwords
-    os.chmod(path, 0700)
+    os.chmod(path, 0600)
 
 def doConfiguration(storage, payload, ksdata, instClass):
     from pyanaconda.kickstart import runPostScripts
@@ -86,10 +87,13 @@ def doConfiguration(storage, payload, ksdata, instClass):
         ksdata.firewall.execute(storage, ksdata, instClass)
         ksdata.xconfig.execute(storage, ksdata, instClass)
         ksdata.skipx.execute(storage, ksdata, instClass)
+        ksdata.network.execute(storage, ksdata, instClass)
+
 
     if willWriteNetwork:
         with progress_report(_("Writing network configuration")):
             ksdata.network.execute(storage, ksdata, instClass)
+ 
 
     # Creating users and groups requires some pre-configuration.
     with progress_report(_("Creating users")):
@@ -166,9 +170,12 @@ def doInstall(storage, payload, ksdata, instClass):
         ksdata.firstboot.setup(storage, ksdata, instClass)
         ksdata.addons.setup(storage, ksdata, instClass)
 	## adding additional repo for xen4CentOS
-	repo = ksdata.RepoData(name="virt7-xen-44-testing",baseurl="http://cbs.centos.org/repos/virt7-xen-44-testing/x86_64/os/")
-	payload.addRepo(repo)
-
+	# wait for network to be connected before adding repo otherewise it will throw an error
+        # for not being able to download its repo data
+        while not nm.nm_is_connected():
+            time.sleep(1)
+        repo = ksdata.RepoData(name="virt7-xen-44-testing",baseurl="http://cbs.centos.org/repos/virt7-xen-44-testing/x86_64/os/")
+        payload.addRepo(repo)
 
 
     storage.updateKSData()  # this puts custom storage info into ksdata
@@ -226,7 +233,8 @@ def doInstall(storage, payload, ksdata, instClass):
     packages = [p for p in packages
                 if p not in instClass.ignoredPackages and p not in ksdata.packages.excludedList]
     # Adding Xen packages and bridge utils for bridge-networking settings
-    packages.append("bridge-utils")
+ #   packaes.append("bridge-utils")
+ #   packages.append("net-tools")
     packages.append("centos-release-xen")
     packages.append("xen")
     payload.preInstall(packages=packages, groups=payload.languageGroups())
