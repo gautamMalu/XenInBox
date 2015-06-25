@@ -90,10 +90,6 @@ def doConfiguration(storage, payload, ksdata, instClass):
         ksdata.network.execute(storage, ksdata, instClass)
 
 
-    if willWriteNetwork:
-        with progress_report(_("Writing network configuration")):
-            ksdata.network.execute(storage, ksdata, instClass)
- 
 
     # Creating users and groups requires some pre-configuration.
     with progress_report(_("Creating users")):
@@ -115,7 +111,14 @@ def doConfiguration(storage, payload, ksdata, instClass):
 
     with progress_report(_("Running post-installation scripts")):
         runPostScripts(ksdata.scripts)
-
+    
+    # because bridge-networking is being set by post-script so we write the
+    # network configuration after it othrewise bridge-networking settings will
+    # be lost
+    if willWriteNetwork:
+        with progress_report(_("Writing network configuration")):
+            ksdata.network.execute(storage, ksdata, instClass)
+ 
     # Write the kickstart file to the installed system (or, copy the input
     # kickstart file over if one exists).
     _writeKS(ksdata)
