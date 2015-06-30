@@ -27,6 +27,7 @@ from pyanaconda import flags
 from pyanaconda import iutil
 from pyanaconda import timezone
 from pyanaconda import network
+from pyanaconda import nm
 from pyanaconda.i18n import _
 from pyanaconda.threads import threadMgr
 from pyanaconda.ui.lib.entropy import wait_for_entropy
@@ -86,7 +87,6 @@ def doConfiguration(storage, payload, ksdata, instClass):
         ksdata.firewall.execute(storage, ksdata, instClass)
         ksdata.xconfig.execute(storage, ksdata, instClass)
         ksdata.skipx.execute(storage, ksdata, instClass)
-        ksdata.network.execute(storage, ksdata, instClass)
 
 
 
@@ -171,10 +171,8 @@ def doInstall(storage, payload, ksdata, instClass):
     with progress_report(_("Setting up the installation environment")):
         ksdata.firstboot.setup(storage, ksdata, instClass)
         ksdata.addons.setup(storage, ksdata, instClass)
-	## adding additional repo for xen4CentOS
-	# wait for network to be connected before adding repo otherewise it will throw an error
-        # for not being able to download its repo data
-        if network.wait_for_connecting_NM():
+	## adding additional repo for Xen4CentOS, network is required to download its metadata
+        if nm.nm_is_connected():
             repo = ksdata.RepoData(name="virt7-xen-44-testing",baseurl="http://cbs.centos.org/repos/virt7-xen-44-testing/x86_64/os/")
             payload.addRepo(repo)
 
