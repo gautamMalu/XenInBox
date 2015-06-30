@@ -19,7 +19,6 @@
 #
 # Red Hat Author(s): Chris Lumens <clumens@redhat.com>
 #
-import time
 from blivet import turnOnFilesystems, callbacks
 from pyanaconda.bootloader import writeBootLoader
 from pyanaconda.progress import progress_report, progress_message, progress_step, progress_complete, progress_init
@@ -175,10 +174,9 @@ def doInstall(storage, payload, ksdata, instClass):
 	## adding additional repo for xen4CentOS
 	# wait for network to be connected before adding repo otherewise it will throw an error
         # for not being able to download its repo data
-        while not nm.nm_is_connected():
-            time.sleep(1)
-        repo = ksdata.RepoData(name="virt7-xen-44-testing",baseurl="http://cbs.centos.org/repos/virt7-xen-44-testing/x86_64/os/")
-        payload.addRepo(repo)
+        if network.wait_for_connecting_NM():
+            repo = ksdata.RepoData(name="virt7-xen-44-testing",baseurl="http://cbs.centos.org/repos/virt7-xen-44-testing/x86_64/os/")
+            payload.addRepo(repo)
 
 
     storage.updateKSData()  # this puts custom storage info into ksdata
@@ -235,9 +233,7 @@ def doInstall(storage, payload, ksdata, instClass):
     # explicitly excluded ones (user takes the responsibility)
     packages = [p for p in packages
                 if p not in instClass.ignoredPackages and p not in ksdata.packages.excludedList]
-    # Adding Xen packages and bridge utils for bridge-networking settings
- #   packaes.append("bridge-utils")
- #   packages.append("net-tools")
+    # Adding Xen packages
     packages.append("centos-release-xen")
     packages.append("xen")
     payload.preInstall(packages=packages, groups=payload.languageGroups())
