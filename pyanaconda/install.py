@@ -171,12 +171,6 @@ def doInstall(storage, payload, ksdata, instClass):
     with progress_report(_("Setting up the installation environment")):
         ksdata.firstboot.setup(storage, ksdata, instClass)
         ksdata.addons.setup(storage, ksdata, instClass)
-	## adding additional repo for Xen4CentOS, network is required to download its metadata
-        if nm.nm_is_connected():
-            repo = ksdata.RepoData(name="virt7-xen-44-testing",baseurl="http://cbs.centos.org/repos/virt7-xen-44-testing/x86_64/os/")
-            payload.addRepo(repo)
-
-
     storage.updateKSData()  # this puts custom storage info into ksdata
 
     # Do partitioning.
