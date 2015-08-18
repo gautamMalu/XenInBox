@@ -1,4 +1,4 @@
-%post --log=/var/log/bridge_setting.log
+%post --log=/var/log/anaconda/bridge_setting.log
 #!/bin/bash
 
 #get the default device
