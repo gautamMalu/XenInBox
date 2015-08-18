@@ -63,11 +63,6 @@ class InstallClass(BaseInstallClass):
                                  size=Size("1GiB"),
                                  maxSize=Size("4GiB"),
                                  grow=True,
-                                 btr=True, lv=True, thin=True, encrypted=True),
-                        PartSpec(mountpoint="/home",
-                                 fstype=storage.defaultFSType,
-                                 size=Size("500MiB"), grow=True,
-                                 requiredSpace=Size("50GiB"),
                                  btr=True, lv=True, thin=True, encrypted=True)]
 
         bootreqs = platform.setDefaultPartitioning()
@@ -123,11 +118,11 @@ class InstallClass(BaseInstallClass):
             return
         ifcfg = network.IfcfgFile(ifcfg_path)
         ifcfg.read()
-    #    ifcfg.set(('ONBOOT', 'yes'))
+        ifcfg.set(('ONBOOT', 'yes'))
         ifcfg.write()
         for nd in ksdata.network.network:
             if nd.device == devName:
-     #           nd.onboot = True
+                nd.onboot = True
                 break
 
     def __init__(self):
