@@ -24,11 +24,20 @@ from pyanaconda import network
 from pyanaconda import nm
 import types
 
+
+from blivet.partspec import PartSpec
+from blivet.devicelibs import swap
+from blivet.platform import platform
+from blivet.size import Size
+from pyanaconda.kickstart import getAvailableDiskSpace
+
+
+
 class InstallClass(BaseInstallClass):
     # name has underscore used for mnemonics, strip if you dont need it
-    id = "centos"
-    name = N_("CentOS Linux")
-    sortPriority = 25000
+    id = "centos_xen"
+    name = N_("CentOS Linux_Xen")
+    sortPriority = 30000
     if productName.startswith("Red Hat ") or productName.startswith("Fedora "):
         hidden = 1
 
@@ -39,20 +48,52 @@ class InstallClass(BaseInstallClass):
 
     ignoredPackages = ["ntfsprogs", "reiserfs-utils"]
 
-    installUpdates = False
+    # As both xen repo and core repo has kernel package, installer get stuck
+    # durin kernel choice with updates option enabled, it will use the latest
+    # available kernel i.e. 3.18
+    installUpdates = True
 
     _l10n_domain = "comps"
 
     efi_dir = "centos"
 
+    # Setting 4GB for dom0, so that rest of the space will be availbe for domUs.    
+    def setDefaultPartitioning(self,storage):
+        autorequests = [PartSpec(mountpoint="/", fstype=storage.defaultFSType,
+                                 size=Size("1GiB"),
+                                 maxSize=Size("4GiB"),
+                                 grow=True,
+                                 btr=True, lv=True, thin=True, encrypted=True)]
+
+        bootreqs = platform.setDefaultPartitioning()
+        if bootreqs:
+            autorequests.extend(bootreqs)
+
+
+        disk_space = getAvailableDiskSpace(storage)
+        swp = swap.swapSuggestion(disk_space=disk_space)
+        autorequests.append(PartSpec(fstype="swap", size=swp, grow=False,
+                                     lv=True, encrypted=True))
+
+        for autoreq in autorequests:
+            if autoreq.fstype is None:
+                if autoreq.mountpoint == "/boot":
+                    autoreq.fstype = storage.defaultBootFSType
+                else:
+                    autoreq.fstype = storage.defaultFSType
+
+        storage.autoPartitionRequests = autorequests
+
+
     def configure(self, anaconda):
         BaseInstallClass.configure(self, anaconda)
-        BaseInstallClass.setDefaultPartitioning(self, anaconda.storage)
+        self.setDefaultPartitioning(anaconda.storage)
 
     # Set first boot policy regarding ONBOOT value
     # (i.e. which network devices should be activated automatically after reboot)
-    # After switch root we set ONBOOT=no as default for all devices not activated
+    # After switch root we set ONBOOT=no as default for all devices not activatedi
     # in initramfs. Here, at the end of installation, we check and modify it eventually.
+
     def setNetworkOnbootDefault(self, ksdata):
         # if there is no device to be autoactivated after reboot
         for devName in nm.nm_devices():
