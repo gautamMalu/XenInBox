@@ -6,10 +6,14 @@ vg_free=`/sbin/vgs --noheadings -o vg_name,vg_free | awk '{print $2}'`
 vg_free=`echo $vg_free | awk -F. '{print $1}'`
 if [ $vg_free -lt 4 ]; then
     echo "no enough space left of system for Demo VMs, so not creating demo VMs"
-
+    #removing the xl config scripts for both VMs
+    rm -rf /root/CentOS-7-demoVm.cfg /root/CentOS-7-demoVm.cfg
 elif [ $vg_free -lt 8 ]; then
     echo "Only space for 1 VM so creating CentOS-7 VM"
     /sbin/lvcreate -L 4G -n CentOS-7-demo $vg_name --yes
+
+    #removin the xl config for c6-demo
+    rm -rf /root/CentOS-6-demoVm.cfg
 
     /usr/bin/unxz -k /srv/xen/CentOS-7-x86_64-XenCloud.qcow2.xz
     echo "unzipped CentOS-7 vmImage now converting it to raw format"
