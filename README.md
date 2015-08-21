@@ -1,7 +1,6 @@
 # XenInBox
 Anaconda installer which delives xen 4.4.2 + centos 7 + bridge networking 
 
-
 ## How To
 clone this repo
 
@@ -20,3 +19,5 @@ press Esc at boot selection screen during installation http://goo.gl/57GAMD you 
 ````
 boot: linux inst.updates=<path to updates.img>
 ````
+
+Or you can use this wrapper repo https://github.com/gautamMalu/centos-xen
